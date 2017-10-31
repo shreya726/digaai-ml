@@ -31,10 +31,11 @@ def read_dataset(mode):
         mode = tf.contrib.learn.ModeKeys.EVAL
 
     def _input_fn()   # gets passed to tensorflow
+        # gets the file and parses it 
         input_file_names = tf.train.match_filenames_once(filename)
         filename_queue = tf.train.string_input_producer(input_file_names, shuffle=True)
 
-        # load the data
+        # load the data with given batch size (constant above)
         reader = tf.TextLineReader()
         _, value = reader.read_up_to(filename_queue, num_records=BATCH_SIZE)
         value_column = tf.expand_dims(value, -1)
@@ -77,7 +78,20 @@ def read_dataset(mode):
     return _input_fn
 
 def cnn_model(features, target, mode):
-    pass
+    
+    # load the 3-gram mappings 
+    # TODO @Shreya for filename 
+    table = lookup.index_table_from_file(vocabulary_file="FILENAME", num_oov_buckets=1, default_value=-1)
+    
+    # where CSV_COLUMNS[1] is 'first'
+    first_name = tf.squeeze(features[CSV_COLUMNS[0]], [1])
+    
+    # TODO @Wjdan
+    # 0- make sure it doesn't exceed MAX_NAME_LENGTH
+    # 1- generate 3-grams of first_name
+    # 2- look its numerical value in the table 
+    # 3- WHAT TO PUT IF NOT FOUND??????
+    
 
 def get_train():
     #reaturn read_dataset('train')
