@@ -21,6 +21,28 @@ def save_grams():
     """
     pass
 
+def get_3grams(name):
+    """ Get 3-grams of names 
+    """
+    if len(name) < BATCH_SIZE:
+        grams = [name[i:i+3] for i in range(0, len(name) - 2)]
+
+        # Padding names that are shorter than average
+        padding = 'ZYXW'
+        if BATCH_SIZE - len(name) > 0:
+            grams += [name[len(name) - 2:] + padding]
+        if BATCH_SIZE - len(name) > 1:
+            grams += [name[-1:] + padding*2]
+        if BATCH_SIZE - len(name) > 2:
+            for i in range(len(name), BATCH_SIZE):
+                grams += [padding*3]
+        return grams
+    
+    else:
+        # truncating names that are longer than average
+        return [name[i:i+3] for i in range(0, len(name) - 2)]
+
+
 def read_dataset(mode):
     # TODO @Ben use mode to create filename so that we can 
     # pass mode as 'train' or 'eval'
@@ -42,9 +64,17 @@ def read_dataset(mode):
 
         # TODO @Ben add record_defaults and field_delim values
         # read https://www.tensorflow.org/api_docs/python/tf/decode_csv
-        columns = tf.decode_csv(value_column, record_defaults=NONE, field_delim=NONE)
+        columns = tf.decode_csv(value_column, record_defaults=NONE, field_delim=',')
         features = dict(zip(CSV_COLUMNS, columns))
-        label = feature.pop(LABEL_COLUMN)
+
+        # First name
+        first = features.pop('first')
+        first_3grams = get_3grams(first)
+
+        # Last name
+        last = features.pop('last')
+        last_3grams = get_3grams(last)
+
 
         # convert input to numeric value
         # TODO @Duaa and @Shreya: adjust the code below so it does sth like this
@@ -60,7 +90,7 @@ def read_dataset(mode):
         from sys import maxsize as NULL
         table = tf.contrib.lookup.index_table_from_file(
                 vocabulary_file='DATA FILENAME', num_oov_buckets=NULL,
-                vocab_size=NULL default_value=NULL)
+                vocab_size=NULL, default_value=NULL)
 
         # tf.constant just converts the name split (3-grams) into a "constant" type for lookup
         # read https://www.tensorflow.org/api_docs/python/tf/constant
@@ -71,7 +101,7 @@ def read_dataset(mode):
         # read here: https://www.tensorflow.org/api_docs/python/tf/tables_initializer
         with tf.Session() as sess:
             tf.tables_initializer().run()
-            print "{} --> {}".format(lines[0], numbers.eval())
+            print("{} --> {}".format(lines[0], numbers.eval()))
             
         return features, target
 
