@@ -22,7 +22,8 @@ def save_grams():
     pass
 
 def read_dataset(mode):
-    # use mode to create filename
+    # TODO @Ben use mode to create filename so that we can 
+    # pass mode as 'train' or 'eval'
     filename = "PATH OF FILE"
     if prefix == "train":
         mode = tf.contrib.learn.ModeKeys.TRAIN
