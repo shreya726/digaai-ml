@@ -2,6 +2,9 @@
 
 import tensorflow as tf
 
+from mapping import mapping as MAPPING
+from grams import grams as GRAMS
+
 tf.logging.set_verbosity(tf.logging.INFO)
 
 TRAN_STEPS = 1000
@@ -15,10 +18,7 @@ MAX_NAME_LENGTH = 10
 CSV_COLUMNS = ['first?', 'last?']
 LABEL_COLUMN = 'first?'
 
-def save_grams():
-    """
-    saves new 3-grams with their numerical values to a mapping
-    """
+def save_gram(gram, num_val):
     pass
 
 def get_3grams(name):
@@ -42,6 +42,19 @@ def get_3grams(name):
         # truncating names that are longer than average
         return [name[i:i+3] for i in range(0, len(name) - 2)]
 
+def convert_to_numerical(grams):
+    result = []
+    for gram in grams:
+        try:
+            result += [int(GRAMS[gram])]
+        except KeyError:
+            converted_gram = []
+            for letter in gram:
+                converted_gram += [MAPPING[letter]]
+            num_val = '0'.join(converted_gram)
+            result += [int(num_val)]
+            save_gram(gram, num_val)
+    return result
 
 def read_dataset(mode):
     # TODO @Ben use mode to create filename so that we can 
@@ -78,9 +91,10 @@ def read_dataset(mode):
 
         # convert input to numeric value
         # TODO @Duaa and @Shreya: adjust the code below so it does sth like this
-        # 1- looks up the 3-gram's value in the 3-gram's mapping
-        # 2- if doesn't exist, construct one using the letter mapping
-        # 3- and adds it to the table, anything else?
+
+        first_vector = convert_to_numerical(first_3grams)
+        last_vector = convert_to_numerical(last_3grams)
+       
 
         #table = tf.contrib.lookup.index_table_from_tensor(mapping=tf.contant(TARGETS))
         #target = table.lookup(label)
