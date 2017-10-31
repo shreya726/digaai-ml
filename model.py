@@ -30,7 +30,7 @@ def read_dataset(mode):
     else:
         mode = tf.contrib.learn.ModeKeys.EVAL
 
-    def _input_fn()   # gets passed to tensorflow
+    def _input_fn():   # gets passed to tensorflow
         # gets the file and parses it 
         input_file_names = tf.train.match_filenames_once(filename)
         filename_queue = tf.train.string_input_producer(input_file_names, shuffle=True)
