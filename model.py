@@ -13,6 +13,7 @@ TRAN_STEPS = 1000
 BATCH_SIZE = 0
 
 MAX_NAME_LENGTH = 10
+PADDING = 'ZYXW'
 
 # TODO @Ben all column names
 CSV_COLUMNS = ['first?', 'last?']
@@ -28,14 +29,14 @@ def get_3grams(name):
         grams = [name[i:i+3] for i in range(0, len(name) - 2)]
 
         # Padding names that are shorter than average
-        padding = 'ZYXW'
-        if BATCH_SIZE - len(name) > 0:
-            grams += [name[len(name) - 2:] + padding]
-        if BATCH_SIZE - len(name) > 1:
-            grams += [name[-1:] + padding*2]
-        if BATCH_SIZE - len(name) > 2:
+        overflow = BATCH_SIZE - len(name)
+        if overflow > 0:
+            grams += [name[len(name) - 2:] + PADDING]
+        if overflow > 1:
+            grams += [name[-1:] + PADDING*2]
+        if overflow > 2:
             for i in range(len(name), BATCH_SIZE):
-                grams += [padding*3]
+                grams += [PADDING*3]
         return grams
     
     else:
