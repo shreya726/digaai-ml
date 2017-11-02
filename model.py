@@ -89,17 +89,15 @@ def read_dataset(mode):
         last = features.pop('last')
         last_3grams = get_3grams(last)
 
-
         # convert input to numeric value
         # TODO @Duaa and @Shreya: adjust the code below so it does sth like this
-
         first_vector = convert_to_numerical(first_3grams)
         last_vector = convert_to_numerical(last_3grams)
        
-
         #table = tf.contrib.lookup.index_table_from_tensor(mapping=tf.contant(TARGETS))
         #target = table.lookup(label)
 
+        # TODO @Duaa and @Shreya
         # first it creates a table with required params
         # read https://www.tensorflow.org/api_docs/python/tf/contrib/lookup/index_table_from_file
         from sys import maxsize as NULL
@@ -123,14 +121,16 @@ def read_dataset(mode):
     return _input_fn
 
 def cnn_model(features, target, mode):
-    
     # load the 3-gram mappings 
     # TODO @Shreya for filename 
-    table = lookup.index_table_from_file(vocabulary_file="FILENAME", num_oov_buckets=1, default_value=-1)
+    table = lookup.index_table_from_file(vocabulary_file="FILENAME",
+            num_oov_buckets=1, default_value=-1)
     
-    # where CSV_COLUMNS[1] is 'first'
-    first_name = tf.squeeze(features[CSV_COLUMNS[0]], [1])
-    
+    # where CSV_COLUMNS[0] is 'first'
+    # I'm not sure if the axis argument is useful in our case 
+    # sice our input has only one value in it. So I remove axis=[1]
+    first_name = tf.squeeze(input=features[CSV_COLUMNS[0]])
+
     # TODO @Wjdan
     # 0- make sure it doesn't exceed MAX_NAME_LENGTH
     # 1- generate 3-grams of first_name
@@ -139,12 +139,10 @@ def cnn_model(features, target, mode):
     
 
 def get_train():
-    #reaturn read_dataset('train')
-    pass
+    return read_dataset('train')
 
 def get_validate():
-    #return read_dataset('eval')
-    pass
+    return read_dataset('eval')
 
 def train_fn():
     pass
