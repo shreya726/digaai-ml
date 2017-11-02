@@ -130,6 +130,8 @@ def cnn_model(features, target, mode):
     # I'm not sure if the axis argument is useful in our case 
     # sice our input has only one value in it. So I remove axis=[1]
     # read https://www.tensorflow.org/api_docs/python/tf/squeeze
+    # but I am also converned that tf.squeeze() will remove the name itself
+    # so I will mark this FIXME in case we run into problems later
     first_name = tf.squeeze(input=features[CSV_COLUMNS[0]])
 
     # TODO @Wjdan
