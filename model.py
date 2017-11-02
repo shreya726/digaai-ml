@@ -129,6 +129,7 @@ def cnn_model(features, target, mode):
     # where CSV_COLUMNS[0] is 'first'
     # I'm not sure if the axis argument is useful in our case 
     # sice our input has only one value in it. So I remove axis=[1]
+    # read https://www.tensorflow.org/api_docs/python/tf/squeeze
     first_name = tf.squeeze(input=features[CSV_COLUMNS[0]])
 
     # TODO @Wjdan
