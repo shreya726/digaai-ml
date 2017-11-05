@@ -140,6 +140,7 @@ def cnn_model(features, target, mode):
     # but I am also converned that tf.squeeze() will remove the name itself
     # so I will mark this FIXME in case we run into problems later
     first_name = tf.squeeze(input=features[CSV_COLUMNS[0]])
+    last_name = tf.squeeze(input=features[CSV_COLUMNS[1]])
 
     # TODO @Wjdan
     # 0- make sure it doesn't exceed MAX_NAME_LENGTH
@@ -173,9 +174,6 @@ def cnn_model(features, target, mode):
             predictions=predictions_dict,
             loss=loss,
             train_op=train_op)
-
-
-
 
 def serving_input_fn():
     feature_placeholders = {
