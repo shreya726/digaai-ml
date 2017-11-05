@@ -139,14 +139,8 @@ def cnn_model(features, target, mode):
     # read https://www.tensorflow.org/api_docs/python/tf/squeeze
     # but I am also converned that tf.squeeze() will remove the name itself
     # so I will mark this FIXME in case we run into problems later
-    first_name = tf.squeeze(input=features[CSV_COLUMNS[0]])
-    last_name = tf.squeeze(input=features[CSV_COLUMNS[1]])
-
-    # TODO @Wjdan
-    # 0- make sure it doesn't exceed MAX_NAME_LENGTH
-    # 1- generate 3-grams of first_name
-    # 2- look its numerical value in the table 
-    # 3- WHAT TO PUT IF NOT FOUND??????
+    first_name = features[CSV_COLUMNS[0]]
+    #last_name = tf.squeeze(input=features[CSV_COLUMNS[1]])
 
     logits = tf.contrib.layers.fully_connected(input=words, num_outputs=len(CLASSES), activation_fn=None)
 
@@ -159,7 +153,7 @@ def cnn_model(features, target, mode):
 
     if mode == tf.contrib.learn.ModeKeys.TRAIN or \
             mode == tf.contrib.learn.ModeKeys.EVAL:
-        loss = tf.losses.sparse_softmax_cross_entropy(target, logits)
+        loss = tf.losses.sparse_softmax_cross_entropy(first_name, logits)
         train_op = tf.contrib.layers.optimize_loss(
                 loss,
                 tf.contrib.framework.get_global_step(),
@@ -178,7 +172,7 @@ def cnn_model(features, target, mode):
 def serving_input_fn():
     feature_placeholders = {
             'first' : tf.placeholder(tf.string, [None]),
-            'last'  : tf.placeholder(tf.string, [None]),
+            #'last'  : tf.placeholder(tf.string, [None]),
     }
 
     features = {
