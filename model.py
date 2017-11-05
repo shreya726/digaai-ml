@@ -23,9 +23,6 @@ CSV_COLUMNS = ['first?', 'last?']
 LABEL_COLUMN = 'first?'
 CLASSES = ['brazilian', 'portugeuse', 'neither']
 
-def save_gram(gram, num_val):
-    pass
-
 def get_3grams(name):
     """ Get 3-grams of names 
     """
@@ -58,7 +55,9 @@ def convert_to_numerical(grams):
                 converted_gram += [MAPPING[letter.encode('utf-8')]]
             num_val = '0'.join(converted_gram)
             result += [int(num_val)]
-            save_gram(gram, num_val)
+
+            # Saving grams to dictionary
+            GRAMS[gram] = num_val
     return result
 
 def read_dataset(mode):
@@ -97,6 +96,10 @@ def read_dataset(mode):
         # convert input to numeric value
         first_vector = convert_to_numerical(first_3grams)
         last_vector = convert_to_numerical(last_3grams)
+
+        # Saving updated grams to json file
+        with open('grams.json') as outfile:
+            json.dump(GRAMS, outfile)
        
         #table = tf.contrib.lookup.index_table_from_tensor(mapping=tf.contant(TARGETS))
         #target = table.lookup(label)
