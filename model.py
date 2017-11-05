@@ -26,17 +26,17 @@ CLASSES = ['brazilian', 'portugeuse', 'neither']
 def get_3grams(name):
     """ Get 3-grams of names 
     """
-    if len(name) < BATCH_SIZE:
+    if len(name) < MAX_NAME_LENGTH:
         grams = [name[i:i+3] for i in range(0, len(name) - 2)]
 
         # Padding names that are shorter than average
-        overflow = BATCH_SIZE - len(name)
+        overflow = MAX_NAME_LENGTH - len(name)
         if overflow > 0:
             grams += [name[len(name) - 2:] + PADDING]
         if overflow > 1:
             grams += [name[-1:] + PADDING*2]
         if overflow > 2:
-            for i in range(len(name), BATCH_SIZE):
+            for i in range(len(name), MAX_NAME_LENGTH):
                 grams += [PADDING*3]
         return grams
     
