@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
 import tensorflow as tf
+import json
 
 from mapping import mapping as MAPPING
-from grams import grams as GRAMS
+
+with open('grams.json') as data:
+    GRAMS = json.load(data)
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
