@@ -51,7 +51,7 @@ def convert_to_numerical(grams):
         except KeyError:
             converted_gram = []
             for letter in gram:
-                converted_gram += [MAPPING[letter]]
+                converted_gram += [MAPPING[letter.encode('utf-8')]]
             num_val = '0'.join(converted_gram)
             result += [int(num_val)]
             save_gram(gram, num_val)
@@ -81,16 +81,15 @@ def read_dataset(mode):
         columns = tf.decode_csv(value_column, record_defaults=NONE, field_delim=',')
         features = dict(zip(CSV_COLUMNS, columns))
 
-        # First name
+        # First name into grams
         first = features.pop('first')
         first_3grams = get_3grams(first)
 
-        # Last name
+        # Last name into grams
         last = features.pop('last')
         last_3grams = get_3grams(last)
 
         # convert input to numeric value
-        # TODO @Duaa and @Shreya: adjust the code below so it does sth like this
         first_vector = convert_to_numerical(first_3grams)
         last_vector = convert_to_numerical(last_3grams)
        
