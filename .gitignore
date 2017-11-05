@@ -1,4 +1,5 @@
 *.swp
 .DS_Store
 *.csv
+*.pyc
 .ipynb_checkpoints
