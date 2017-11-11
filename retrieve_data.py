@@ -14,13 +14,19 @@ import http.client
 import json
 import csv
 import argparse
+import regex
 
-key = "INSERT ACCESS TOKEN"
+key = "EAACEdEose0cBALsqxTaHjAVNZCZCt3aixAuJKCTdG1yG4eOLSH1ojtQRGUObeXU7MIEuT23PlwbAFbhliZBrWU1ULwzMqPrbGY4qMnnVDrksWxVpihZB5PyCrbIMDxXTDXKCUhF3WiGrthoKUOdMATPRgOwk8qNo77VgYyhcmcZCmYqH9JJhhUAvVVBVfD4UZD"
 
-def get_names(filename, group_ids, limit):
-    f = open(filename, "w")
-    f.seek(0)
-    writer = csv.writer(f, quoting=csv.QUOTE_NONE)
+def get_names(group_ids, limit, value):
+    f_training = open("training.csv", "a")
+    writer_training = csv.writer(f_training, quoting=csv.QUOTE_NONE)
+
+    f_testing = open("testing.csv", "a")
+    writer_testing = csv.writer(f_testing, quoting=csv.QUOTE_NONE)
+
+    f_eval = open("eval.csv", "a")
+    writer_eval = csv.writer(f_eval, quoting=csv.QUOTE_NONE)
     count = 0
     
     for group_id in group_ids:
@@ -31,8 +37,12 @@ def get_names(filename, group_ids, limit):
             conn.request("GET", "/v2.10/" + group_id + "/members?access_token=" + key + "&fields=name&after=" + next_link)
             res = conn.getresponse()
             data = res.read()
-            json_data = json.loads(data)
-            
+            try:
+                json_data = json.loads(data)
+            except:
+                print("JSON data failed to load. Did you add the access token?")
+                return
+
             if "data" not in json_data:
                 print(json_data["error"]["message"])
                 return
@@ -41,13 +51,32 @@ def get_names(filename, group_ids, limit):
                 data_name = user["name"].lower()
                 pre_name = data_name.split()
                 fname = ' '.join(pre_name[:-1])
+                fname = fname.replace(","," ")
                 lname = pre_name[-1]
-                name = [fname, lname]
-
-                writer.writerow(name)
+                lname = lname.replace(","," ")
+                
+                fname = regex.sub(u'[^\p{Latin}]', u'', fname)
+                lname = regex.sub(u'[^\p{Latin}]', u'', lname)
+                if fname == "" or lname == "":
+                    continue
+                
+                fname = fname.encode("utf-8")
+                lname = lname.encode("utf-8")
+                
+                name = [fname, lname, value]
+                
+                if count % 5 == 0 and count % 2 == 0:
+                    writer_testing.writerow(name)
+                elif count % 5 == 0:
+                    writer_eval.writerow(name)
+                else:
+                    writer_training.writerow(name)
+                
                 count += 1
                 if count >= limit:
-                    f.close()
+                    f_training.close()
+                    f_testing.close()
+                    f_eval.close()
                     return
             
 
@@ -57,31 +86,24 @@ def get_names(filename, group_ids, limit):
                 next_link = None
     
             
-    f.close()
+    f_training.close()
+    f_testing.close()
+    f_eval.close()
     return
 
 # These are the group ids of the groups we are taking names from.
-brazil_ids = ["422121401312686","701457699900185","435932449946192","538824349628836","248974475276092"]
-portugal_ids = ["196549537052388","152035978166262","795722390452796","1748734022116488","344851139179868","481561982041744"]
-
+brazil_ids = ["422121401312686","435932449946192","538824349628836","248974475276092"]
+not_brazil_ids = ["369769286554402", "135263893484028", "716828768412499"]
 # Default limit is one million
 limit=1000000
 
 # Argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("-b", "--brazil", help="Gather only data for Brazilians", action="store_true")
-parser.add_argument("-p", "--portugal", help="Gather only data for Portuguese", action="store_true")
 parser.add_argument("-l", "--limit", help="Specify a limit for how many names to gather")
 args = parser.parse_args()
 
 if args.limit:
     limit = int(args.limit)
 
-if not args.brazil and not args.portugal:
-    get_names("brazilians.csv", brazil_ids, limit)
-    get_names("portuguese.csv", portugal_ids, limit)
-
-if args.brazil:
-    get_names("brazilians.csv", brazil_ids, limit)
-elif args.portugal:
-    get_names("portuguese.csv", portugal_ids, limit)
+get_names(brazil_ids, limit, 1)
+get_names(not_brazil_ids, limit, 0)
