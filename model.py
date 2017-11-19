@@ -2,6 +2,7 @@
 
 import tensorflow as tf
 import tensorflow.contrib.learn as tflearn
+import tensorflow.contrib.metrics as metrics
 import json
 
 from mapping import mapping as MAPPING
@@ -10,7 +11,7 @@ with open('grams.json') as data:
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-TRAN_STEPS = 1000
+TRAIN_STEPS = 1000
 
 # TODO @Shreya
 BATCH_SIZE = 0
@@ -67,7 +68,8 @@ def read_dataset(mode):
 	# pass mode as 'train' or 'eval'
 	filename = "./data/"	#PATH OF FILE"
 
-	if prefix == "train":
+
+	if mode == "train":
 		mode = tf.contrib.learn.ModeKeys.TRAIN
 		filename += "training"
 	else:
@@ -198,11 +200,11 @@ def get_validate():
 	return read_dataset('eval')
 
 from tensorflow.contrib.learn.python.learn.utils import saved_model_export_utils
-def train_fn(output_path):
+def train_fn(output_dir):
 	return tflearn.Experiment(
-			tflearn.Estimator(model_fn=cnn_model, model_dir=output_path),
+			tflearn.Estimator(model_fn=cnn_model, model_dir=output_dir),
 			train_input_fn=get_train(),
-			eval_input_fn=get_valid(),
+			eval_input_fn=get_validate(),
 			eval_metrics={
 				'acc': tflearn.MetricSpec(
 					metric_fn=metrics.streaming_accuracy, prediction_key='class'
