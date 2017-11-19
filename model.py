@@ -3,6 +3,7 @@
 import tensorflow as tf
 import tensorflow.contrib.learn as tflearn
 import tensorflow.contrib.metrics as metrics
+from tensorflow.contrib import lookup
 import json
 import csv
 
@@ -146,7 +147,7 @@ def read_dataset(mode):
 		# read here: https://www.tensorflow.org/api_docs/python/tf/tables_initializer
 		with tf.Session() as sess:
 			tf.tables_initializer().run()
-			print("{} --> {}".format(lines[0], numbers.eval()))
+			#print("{} --> {}".format(lines[0], numbers.eval()))
 			
 		return features, label
 
@@ -155,8 +156,8 @@ def read_dataset(mode):
 def cnn_model(features, target, mode):
 	# load the 3-gram mappings 
 	# TODO @Shreya for filename 
-	table = lookup.index_table_from_file(vocabulary_file="grams.json",
-			num_oov_buckets=1, default_value=-1)
+	#table = lookup.index_table_from_file(vocabulary_file="grams.json",
+	#		num_oov_buckets=1, default_value=-1)
 	
 	# where CSV_COLUMNS[0] is 'first'
 	# I'm not sure if the axis argument is useful in our case 
@@ -167,7 +168,7 @@ def cnn_model(features, target, mode):
 	first_name = features[CSV_COLUMNS[0]]
 	#last_name = tf.squeeze(input=features[CSV_COLUMNS[1]])
 
-	logits = tf.contrib.layers.fully_connected(input=words, num_outputs=len(CLASSES), activation_fn=None)
+	logits = tf.contrib.layers.fully_connected(first_name, num_outputs=len(CLASSES), activation_fn=None)
 
 	# TODO figure out the ethniticity (source) part 
 	predictions_dict = {
