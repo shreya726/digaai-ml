@@ -11,20 +11,31 @@ def process(filename):
 	first_names = []
 	last_names = []
 	sources = []
+	ACCENT = False
 	with open(filename, 'r') as csvfile:
 		csvreader = csv.reader(csvfile, delimiter=',')
 		for row in csvreader:
-			first = convert_to_numerical(get_3grams(row[0]))
-			#print(first)
-			first_names += [first]
-			last_names += [row[1]]
-			source = row[2]
-			sources += [source]
+			print(row[0])
+			print(all(ord(c) < 128 for c in row[0]))
+			if "xc3" in row[0]:
+				ACCENT = True
+				print(row[0])
+				
+	
+			if not ACCENT:
+				first = convert_to_numerical(get_3grams(row[0]))
+				#print(first)
+				first_names += [first]
+				last_names += [row[1]]
+				source = row[2]
+				sources += [source]
 	new_filename = filename[:-4] + '_processed.csv'
-	with open(new_filename, 'wb') as csvfile:
-		csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_NONE)
+	print(first_names)
+	with open(new_filename, 'w') as csvfile:
+		csvwriter = csv.writer(csvfile, quotechar='|', quoting=csv.QUOTE_MINIMAL, delimiter=',')
 		for i in range(0, len(first_names)):
 			csvwriter.writerow([first_names[i],last_names[i], sources[i]])
+	csvfile.close()
 	print('done')
 
 def get_3grams(name):
@@ -50,7 +61,6 @@ def get_3grams(name):
 		return [name[i:i+3] for i in range(0, len(name) - 2)]
 
 def convert_to_numerical(grams):
-	print(grams)
 	result = []
 	for gram in grams:
 		try:
