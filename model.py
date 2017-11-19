@@ -4,6 +4,7 @@ import tensorflow as tf
 import tensorflow.contrib.learn as tflearn
 import tensorflow.contrib.metrics as metrics
 import json
+import csv
 
 from mapping import mapping as MAPPING
 with open('grams.json') as data:
@@ -26,42 +27,42 @@ LABEL_COLUMN = 'source'
 # 1 for brazilian and 0 for non-brazilian 
 CLASSES = ['1', '0']  
 
-def get_3grams(name):
-	""" Get 3-grams of names 
-	"""
-	if len(name) < MAX_NAME_LENGTH:
-		grams = [name[i:i+3] for i in range(0, len(name) - 2)]
+# def get_3grams(name):
+# 	""" Get 3-grams of names 
+# 	"""
+# 	if len(name) < MAX_NAME_LENGTH:
+# 		grams = [name[i:i+3] for i in range(0, len(name) - 2)]
 
-		# Padding names that are shorter than average
-		overflow = MAX_NAME_LENGTH - len(name)
-		if overflow > 0:
-			grams += [name[len(name) - 2:] + PADDING]
-		if overflow > 1:
-			grams += [name[-1:] + PADDING*2]
-		if overflow > 2:
-			for i in range(len(name), MAX_NAME_LENGTH):
-				grams += [PADDING*3]
-		return grams
+# 		# Padding names that are shorter than average
+# 		overflow = MAX_NAME_LENGTH - len(name)
+# 		if overflow > 0:
+# 			grams += [name[len(name) - 2:] + PADDING]
+# 		if overflow > 1:
+# 			grams += [name[-1:] + PADDING*2]
+# 		if overflow > 2:
+# 			for i in range(len(name), MAX_NAME_LENGTH):
+# 				grams += [PADDING*3]
+# 		return grams
 	
-	else:
-		# truncating names that are longer than average
-		return [name[i:i+3] for i in range(0, len(name) - 2)]
+# 	else:
+# 		# truncating names that are longer than average
+# 		return [name[i:i+3] for i in range(0, len(name) - 2)]
 
-def convert_to_numerical(grams):
-	result = []
-	for gram in grams:
-		try:
-			result += [int(GRAMS[gram])]
-		except KeyError:
-			converted_gram = []
-			for letter in gram:
-				converted_gram += [MAPPING[letter.encode('utf-8')]]
-			num_val = '0'.join(converted_gram)
-			result += [int(num_val)]
+# def convert_to_numerical(grams):
+# 	result = []
+# 	for gram in grams:
+# 		try:
+# 			result += [int(GRAMS[gram])]
+# 		except KeyError:
+# 			converted_gram = []
+# 			for letter in gram:
+# 				converted_gram += [MAPPING[letter.encode('utf-8')]]
+# 			num_val = '0'.join(converted_gram)
+# 			result += [int(num_val)]
 
-			# Saving grams to dictionary
-			GRAMS[gram] = num_val
-	return result
+# 			# Saving grams to dictionary
+# 			GRAMS[gram] = num_val
+# 	return result
 
 def read_dataset(mode):
 	# TODO @Ben use mode to create filename so that we can 
@@ -71,14 +72,26 @@ def read_dataset(mode):
 
 	if mode == "train":
 		mode = tf.contrib.learn.ModeKeys.TRAIN
-		filename += "training"
+		filename += "training_processed.csv"
 	else:
 		mode = tf.contrib.learn.ModeKeys.EVAL
-		filename += "eval" # FIXME for testing?
+		filename += "eval_processed.csv" # FIXME for testing?
 
 	def _input_fn():   # gets passed to tensorflow
 		# gets the file and parses it
+		# inputs_as tensors = []
+		# with open(filename, 'r') as data:
+		# 	csv_reader = csv.reader(data, delimiter=',')
+		# 	for row in csv_reader:
+		# 		first = [convert_to_tensor(g) for g in convert_to_numerical(get_3grams(row[0]))]
+		# 		#last = convert_to_numerical(get_3grams(row[1]))
+		# 		source = int(row[2])
+		# 		inputs_as_tensors += [[first,source]]
 		input_file_names = tf.train.match_filenames_once(filename)
+		# print('FILE NAMES')
+		# print(filename)
+		# print(input_file_names.initial_value)
+		# print('RIP')
 		filename_queue = tf.train.string_input_producer(input_file_names, shuffle=True)
 
 		# load the data with given batch size (constant above)
@@ -88,27 +101,30 @@ def read_dataset(mode):
 
 		# TODO @Ben add record_defaults and field_delim values
 		# read https://www.tensorflow.org/api_docs/python/tf/decode_csv
-		columns = tf.decode_csv(value_column, record_defaults=NONE, field_delim=',')
+		columns = tf.decode_csv(value_column, record_defaults=[['first'],['last'],['source']], field_delim=',')
 		features = dict(zip(CSV_COLUMNS, columns))
 
 		# source name
 		label = features.pop(LABEL_COLUMN)
 
-		# First name into grams
-		first = features.pop('first')
-		first_3grams = get_3grams(first)
+		# # First name into grams
+		# first = features.pop('first')
+		# print(type(first))
+		# first_as_string = tf.as_string(first)
+		# print(first_as_string)
+		# first_3grams = get_3grams(tf.as_string(first))
 
-		# Last name into grams
-		last = features.pop('last')
-		last_3grams = get_3grams(last)
+		# # Last name into grams
+		# last = features.pop('last')
+		# last_3grams = get_3grams(last)
 
-		# convert input to numeric value
-		first_vector = convert_to_numerical(first_3grams)
-		last_vector = convert_to_numerical(last_3grams)
+		# # convert input to numeric value
+		# first_vector = convert_to_numerical(first_3grams)
+		# last_vector = convert_to_numerical(last_3grams)
 
-		# Saving updated grams to json file
-		with open('grams.json') as outfile:
-			json.dump(GRAMS, outfile)
+		# # Saving updated grams to json file
+		# with open('grams.json') as outfile:
+		# 	json.dump(GRAMS, outfile)
 	   
 		#table = tf.contrib.lookup.index_table_from_tensor(mapping=tf.contant(TARGETS))
 		#target = table.lookup(label)
