@@ -53,4 +53,4 @@ if __name__ == '__main__':
 	)
 
 	# Run the training job
-	learn_runner.run(model.experiment_fn, output_dir)
+	learn_runner.run(model.train_fn, output_dir)
