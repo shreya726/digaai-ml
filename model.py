@@ -19,9 +19,11 @@ MAX_NAME_LENGTH = 10
 PADDING = 'ZYXW'
 
 # TODO @Ben all column names
-CSV_COLUMNS = ['first?', 'last?']
-LABEL_COLUMN = 'first?'
-CLASSES = ['brazilian', 'portugeuse', 'neither']
+CSV_COLUMNS = ['first', 'last', 'source' ]
+LABEL_COLUMN = 'source'
+
+# 1 for brazilian and 0 for non-brazilian 
+CLASSES = ['1', '0']  
 
 def get_3grams(name):
     """ Get 3-grams of names 
@@ -63,27 +65,32 @@ def convert_to_numerical(grams):
 def read_dataset(mode):
     # TODO @Ben use mode to create filename so that we can 
     # pass mode as 'train' or 'eval'
-    filename = "PATH OF FILE"
+    filename = "./data/"	#PATH OF FILE"
 
     if prefix == "train":
-        mode = tf.contrib.learn.ModeKeys.TRAIN
+	mode = tf.contrib.learn.ModeKeys.TRAIN
+	filename += "training"
     else:
-        mode = tf.contrib.learn.ModeKeys.EVAL
+	mode = tf.contrib.learn.ModeKeys.EVAL
+	filename += "eval" # FIXME for testing?
 
     def _input_fn():   # gets passed to tensorflow
-        # gets the file and parses it 
-        input_file_names = tf.train.match_filenames_once(filename)
-        filename_queue = tf.train.string_input_producer(input_file_names, shuffle=True)
+	# gets the file and parses it
+	input_file_names = tf.train.match_filenames_once(filename)
+	filename_queue = tf.train.string_input_producer(input_file_names, shuffle=True)
 
-        # load the data with given batch size (constant above)
-        reader = tf.TextLineReader()
-        _, value = reader.read_up_to(filename_queue, num_records=BATCH_SIZE)
-        value_column = tf.expand_dims(value, -1)
+	# load the data with given batch size (constant above)
+	reader = tf.TextLineReader()
+	_, value = reader.read_up_to(filename_queue, num_records=BATCH_SIZE)
+	value_column = tf.expand_dims(value, -1)
 
-        # TODO @Ben add record_defaults and field_delim values
-        # read https://www.tensorflow.org/api_docs/python/tf/decode_csv
-        columns = tf.decode_csv(value_column, record_defaults=NONE, field_delim=',')
-        features = dict(zip(CSV_COLUMNS, columns))
+	# TODO @Ben add record_defaults and field_delim values
+	# read https://www.tensorflow.org/api_docs/python/tf/decode_csv
+	columns = tf.decode_csv(value_column, record_defaults=NONE, field_delim=',')
+	features = dict(zip(CSV_COLUMNS, columns))
+
+	# source name
+	label = features.pop(LABEL_COLUMN)
 
         # First name into grams
         first = features.pop('first')
@@ -104,18 +111,18 @@ def read_dataset(mode):
         #table = tf.contrib.lookup.index_table_from_tensor(mapping=tf.contant(TARGETS))
         #target = table.lookup(label)
 
-        # TODO @Duaa and @Shreya
+        # NOT NEEDED
         # first it creates a table with required params
         # read https://www.tensorflow.org/api_docs/python/tf/contrib/lookup/index_table_from_file
-        from sys import maxsize as NULL
-        table = tf.contrib.lookup.index_table_from_file(
-                vocabulary_file='DATA FILENAME', num_oov_buckets=NULL,
-                vocab_size=NULL, default_value=NULL)
+        #from sys import maxsize as NULL
+        #table = tf.contrib.lookup.index_table_from_file(
+        #        vocabulary_file='DATA FILENAME', num_oov_buckets=NULL,
+        #        vocab_size=NULL, default_value=NULL)
 
         # tf.constant just converts the name split (3-grams) into a "constant" type for lookup
         # read https://www.tensorflow.org/api_docs/python/tf/constant
         # replace NULL with 3-grams of current input
-        numbers = table.lookup(tf.constant(NULL))
+        # numbers = table.lookup(label)
 
         # this code initializes a table and keeps it open for other iterations
         # read here: https://www.tensorflow.org/api_docs/python/tf/tables_initializer
@@ -123,14 +130,14 @@ def read_dataset(mode):
             tf.tables_initializer().run()
             print("{} --> {}".format(lines[0], numbers.eval()))
             
-        return features, target
+        return features, label
 
     return _input_fn
 
 def cnn_model(features, target, mode):
     # load the 3-gram mappings 
     # TODO @Shreya for filename 
-    table = lookup.index_table_from_file(vocabulary_file="FILENAME",
+    table = lookup.index_table_from_file(vocabulary_file="grams.json",
             num_oov_buckets=1, default_value=-1)
     
     # where CSV_COLUMNS[0] is 'first'
@@ -170,11 +177,10 @@ def cnn_model(features, target, mode):
             train_op=train_op)
 
 def serving_input_fn():
+    #'last'  : tf.placeholder(tf.string, [None]),
     feature_placeholders = {
             'first' : tf.placeholder(tf.string, [None]),
-            #'last'  : tf.placeholder(tf.string, [None]),
     }
-
     features = {
             key : tf.expand_dims(tensor, -1)
             for key, tensor in feature_placeholders.items()
@@ -210,8 +216,4 @@ def train_fn(output_path):
             ],
             train_steps=TRAIN_STEPS
         )
-
-
-
-
 

@@ -9,27 +9,27 @@ from tensorflow.contrib.learn.python.learn import learn_runner
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--bucket',
-      help='GCS path to data. We assume that data is in gs://BUCKET/txtcls1',
-      required=True
-  )
+  #parser.add_argument(
+  #    '--bucket',
+  #    help='GCS path to data. We assume that data is in gs://BUCKET/txtcls1',
+  #    required=True
+  #)
   parser.add_argument(
       '--output_dir',
       help='GCS location to write checkpoints and export models',
-      required=True
-  )
+      default="./output"
+ )
   parser.add_argument(
       '--train_steps',
       help='How many batches to run training job for',
       type=int,
       default=1000
   )
-  parser.add_argument(
-      '--job-dir',
-      help='this model ignores this field, but it is required by gcloud',
-      default='junk'
-  )
+  #parser.add_argument(
+  #    '--job-dir',
+  #    help='this model ignores this field, but it is required by gcloud',
+  #    default='junk'
+  #)
 
   args = parser.parse_args()
   arguments = args.__dict__
@@ -39,9 +39,9 @@ if __name__ == '__main__':
   arguments.pop('job-dir', None)
 
   output_dir = arguments.pop('output_dir')
-  model.init(arguments.pop('bucket'),
-             arguments.pop('train_steps')
-            )
+  #model.init(arguments.pop('bucket'),
+  #           arguments.pop('train_steps')
+  #          )
 
   # Append trial_id to path if we are doing hptuning
   # This code can be removed if you are not using hyperparameter tuning
