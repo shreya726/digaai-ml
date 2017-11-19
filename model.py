@@ -68,29 +68,29 @@ def read_dataset(mode):
 	filename = "./data/"	#PATH OF FILE"
 
 	if prefix == "train":
-	mode = tf.contrib.learn.ModeKeys.TRAIN
-	filename += "training"
+		mode = tf.contrib.learn.ModeKeys.TRAIN
+		filename += "training"
 	else:
-	mode = tf.contrib.learn.ModeKeys.EVAL
-	filename += "eval" # FIXME for testing?
+		mode = tf.contrib.learn.ModeKeys.EVAL
+		filename += "eval" # FIXME for testing?
 
 	def _input_fn():   # gets passed to tensorflow
-	# gets the file and parses it
-	input_file_names = tf.train.match_filenames_once(filename)
-	filename_queue = tf.train.string_input_producer(input_file_names, shuffle=True)
+		# gets the file and parses it
+		input_file_names = tf.train.match_filenames_once(filename)
+		filename_queue = tf.train.string_input_producer(input_file_names, shuffle=True)
 
-	# load the data with given batch size (constant above)
-	reader = tf.TextLineReader()
-	_, value = reader.read_up_to(filename_queue, num_records=BATCH_SIZE)
-	value_column = tf.expand_dims(value, -1)
+		# load the data with given batch size (constant above)
+		reader = tf.TextLineReader()
+		_, value = reader.read_up_to(filename_queue, num_records=BATCH_SIZE)
+		value_column = tf.expand_dims(value, -1)
 
-	# TODO @Ben add record_defaults and field_delim values
-	# read https://www.tensorflow.org/api_docs/python/tf/decode_csv
-	columns = tf.decode_csv(value_column, record_defaults=NONE, field_delim=',')
-	features = dict(zip(CSV_COLUMNS, columns))
+		# TODO @Ben add record_defaults and field_delim values
+		# read https://www.tensorflow.org/api_docs/python/tf/decode_csv
+		columns = tf.decode_csv(value_column, record_defaults=NONE, field_delim=',')
+		features = dict(zip(CSV_COLUMNS, columns))
 
-	# source name
-	label = features.pop(LABEL_COLUMN)
+		# source name
+		label = features.pop(LABEL_COLUMN)
 
 		# First name into grams
 		first = features.pop('first')
