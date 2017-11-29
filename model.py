@@ -28,43 +28,6 @@ LABEL_COLUMN = 'source'
 # 1 for brazilian and 0 for non-brazilian 
 CLASSES = ['1', '0']  
 
-# def get_3grams(name):
-# 	""" Get 3-grams of names 
-# 	"""
-# 	if len(name) < MAX_NAME_LENGTH:
-# 		grams = [name[i:i+3] for i in range(0, len(name) - 2)]
-
-# 		# Padding names that are shorter than average
-# 		overflow = MAX_NAME_LENGTH - len(name)
-# 		if overflow > 0:
-# 			grams += [name[len(name) - 2:] + PADDING]
-# 		if overflow > 1:
-# 			grams += [name[-1:] + PADDING*2]
-# 		if overflow > 2:
-# 			for i in range(len(name), MAX_NAME_LENGTH):
-# 				grams += [PADDING*3]
-# 		return grams
-	
-# 	else:
-# 		# truncating names that are longer than average
-# 		return [name[i:i+3] for i in range(0, len(name) - 2)]
-
-# def convert_to_numerical(grams):
-# 	result = []
-# 	for gram in grams:
-# 		try:
-# 			result += [int(GRAMS[gram])]
-# 		except KeyError:
-# 			converted_gram = []
-# 			for letter in gram:
-# 				converted_gram += [MAPPING[letter.encode('utf-8')]]
-# 			num_val = '0'.join(converted_gram)
-# 			result += [int(num_val)]
-
-# 			# Saving grams to dictionary
-# 			GRAMS[gram] = num_val
-# 	return result
-
 def read_dataset(mode):
 	# TODO @Ben use mode to create filename so that we can 
 	# pass mode as 'train' or 'eval'
@@ -105,49 +68,13 @@ def read_dataset(mode):
 		columns = tf.decode_csv(value_column, record_defaults=[['first'],['last'],['source']], field_delim=',')
 		features = dict(zip(CSV_COLUMNS, columns))
 
-		# source name
+		# source name, removes it from the features dictionary (table)
 		label = features.pop(LABEL_COLUMN)
-
-		# # First name into grams
-		# first = features.pop('first')
-		# print(type(first))
-		# first_as_string = tf.as_string(first)
-		# print(first_as_string)
-		# first_3grams = get_3grams(tf.as_string(first))
-
-		# # Last name into grams
-		# last = features.pop('last')
-		# last_3grams = get_3grams(last)
-
-		# # convert input to numeric value
-		# first_vector = convert_to_numerical(first_3grams)
-		# last_vector = convert_to_numerical(last_3grams)
-
-		# # Saving updated grams to json file
-		# with open('grams.json') as outfile:
-		# 	json.dump(GRAMS, outfile)
-	   
-		#table = tf.contrib.lookup.index_table_from_tensor(mapping=tf.contant(TARGETS))
-		#target = table.lookup(label)
-
-		# NOT NEEDED
-		# first it creates a table with required params
-		# read https://www.tensorflow.org/api_docs/python/tf/contrib/lookup/index_table_from_file
-		#from sys import maxsize as NULL
-		#table = tf.contrib.lookup.index_table_from_file(
-		#        vocabulary_file='DATA FILENAME', num_oov_buckets=NULL,
-		#        vocab_size=NULL, default_value=NULL)
-
-		# tf.constant just converts the name split (3-grams) into a "constant" type for lookup
-		# read https://www.tensorflow.org/api_docs/python/tf/constant
-		# replace NULL with 3-grams of current input
-		# numbers = table.lookup(label)
 
 		# this code initializes a table and keeps it open for other iterations
 		# read here: https://www.tensorflow.org/api_docs/python/tf/tables_initializer
 		with tf.Session() as sess:
-			tf.tables_initializer().run()
-			#print("{} --> {}".format(lines[0], numbers.eval()))
+			sess.run(features)  # to print a tensor must start a sessions
 			
 		return features, label
 
@@ -167,8 +94,10 @@ def cnn_model(features, target, mode):
 	# so I will mark this FIXME in case we run into problems later
 	first_name = features[CSV_COLUMNS[0]]
 	#last_name = tf.squeeze(input=features[CSV_COLUMNS[1]])
-
-	logits = tf.contrib.layers.fully_connected(first_name, num_outputs=len(CLASSES), activation_fn=None)
+	
+	#tf.log()
+	print(first_name)
+	logits = tf.contrib.layers.fully_connected(tf.to_float(first_name), num_outputs=len(CLASSES))
 
 	# TODO figure out the ethniticity (source) part 
 	predictions_dict = {
@@ -179,7 +108,7 @@ def cnn_model(features, target, mode):
 
 	if mode == tf.contrib.learn.ModeKeys.TRAIN or \
 			mode == tf.contrib.learn.ModeKeys.EVAL:
-		loss = tf.losses.sparse_softmax_cross_entropy(first_name, logits)
+		loss = tf.losses.sparse_softmax_cross_entropy(tf.to_int32(target), logits)
 		train_op = tf.contrib.layers.optimize_loss(
 				loss,
 				tf.contrib.framework.get_global_step(),
